@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use plotters::prelude::*;
 use itertools_num::linspace;
 use std::f64::consts::PI;
@@ -31,13 +30,11 @@ const MARGE: f64 = 0.017 / 2.;
 
 #[derive(Clone)]
 struct ResultatSimulation {
-    car: Vehicule,
     centre_roues: Vec<Position>,
     centre_capeurs: Vec<Position>,
     hauteur: f64,
     kp_value: f64,
     cap_lat: Vec<Position>,
-    total_error: isize,
     var_omega_tot: f64,
     var_omega_vec: Vec<Position>,
 }
@@ -55,7 +52,6 @@ fn simulation(&kp_value: &f64, line1: &Line, line2: &Line, line3: &Line, curve1:
     let mut times_touched: usize;
     let mut error: isize = 0;
     let mut poss_error: isize;
-    let mut total_error: isize = 0;
     let mut var_omega_tot: f64 = 0.;
     let mut last_error = 0;
     let mut delta_error;
@@ -99,7 +95,6 @@ fn simulation(&kp_value: &f64, line1: &Line, line2: &Line, line3: &Line, curve1:
         }
         delta_error = error - last_error;
         last_error = error;
-        total_error += error.abs();
         moteur.control(error,delta_error);
         car.omega = (RAYON_ROUES / L_ROUES) * (moteur.v_r - moteur.v_l);
         var_omega_tot += car.omega.abs();
@@ -118,7 +113,7 @@ fn simulation(&kp_value: &f64, line1: &Line, line2: &Line, line3: &Line, curve1:
     }
     if car.position.x > 0.5 && car.position.y > 0.5 && var_omega_tot > 100. { // qualification
         let hauteur = car.position.y;
-        return Some(ResultatSimulation { car, centre_roues, centre_capeurs, hauteur, kp_value, cap_lat, total_error, var_omega_tot, var_omega_vec })
+        return Some(ResultatSimulation { centre_roues, centre_capeurs, hauteur, kp_value, cap_lat, var_omega_tot, var_omega_vec })
     } else {
         None
     }
@@ -126,7 +121,7 @@ fn simulation(&kp_value: &f64, line1: &Line, line2: &Line, line3: &Line, curve1:
 
 fn main() {
     // def plotter 
-    let root_area = BitMapBackend::new("hello.png",(1200,2000)).into_drawing_area();
+    let root_area = BitMapBackend::new("path.png",(1200,2000)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
     let mut ctx = ChartBuilder::on(&root_area)
         .margin(10)
@@ -188,7 +183,6 @@ fn main() {
     
     let iterator: Vec<f64> = linspace(0.015, 0.07, 200).collect();
     let mut hauteurs: Vec<f64> = linspace(0.0, 0.0, 200).collect();
-    let mut total_errors: Vec<f64> = linspace(0., 0., 200).collect();
     let mut vars_omega_tot: Vec<f64> = linspace(100000., 100000., 200).collect();
     let mut kps: Vec<f64> = linspace(0.0, 0.0, 200).collect();
 
@@ -197,7 +191,6 @@ fn main() {
         match resultat_simulation {
             Some(x) => {
                 hauteurs[i] = x.hauteur;
-                total_errors[i] = x.total_error as f64;
                 kps[i] = x.kp_value;
                 vars_omega_tot[i] = x.var_omega_tot;
             },
@@ -206,18 +199,10 @@ fn main() {
     }
 
     let max_hauteur = hauteurs.iter().copied().fold(f64::NAN, f64::max);
-    let min_total_error = total_errors.iter().copied().fold(f64::NAN, f64::min);
     let min_var_omega_tot = vars_omega_tot.iter().copied().fold(f64::NAN, f64::min);
 
     let id_max = hauteurs.iter().position(|a| {
         if *a == max_hauteur {
-            true
-        } else {
-            false
-        }
-    });
-    let _id_min = total_errors.iter().position(|a| {
-        if *a == min_total_error {
             true
         } else {
             false
