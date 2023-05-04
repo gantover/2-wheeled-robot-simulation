@@ -17,7 +17,10 @@ A cinematic simulation involving a 2 wheeled robot to determine optimal value fo
 > It turns out that the second criteria fits more to the real robot since inertia isn't taken into account in this cinematic simulation but has dramatic effect on osciliation of the robot and
 therefore on its ability to go the farthest. Because minimizing correction minimizes inertia effects it makes sense that kp values returned by this criteria matches real life experiment better.
 
-### Results
+- Path followed by sensor center in red, by the center of wheels in blue
+
+<img src="/src/path.png"  width="50%" height="50%">
+
+- Correction intensity in y and time in x
 
 <img src="/src/omega.png"  width="50%" height="50%">
-<img src="/src/path.png"  width="50%" height="50%">
